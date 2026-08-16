@@ -20,6 +20,18 @@ Please find terraform code in repo
 # Setup EC2 instance
 Install jenkins, Docker, Kubectl, aws cli
 
+#Setup Jenkins 
+add below plugins
+1.Pipeline Stage View
+2.Docker related
+3. Kubernetes related
+ 
+select docker jekins settings do not click install automatically
+
+#configure credentials
+1.github-creds
+2.dockerhub-creds
+
 #add jenkins to docker group
 sudo usermod -aG docker jenkins
 sudo systemctl restart jenkins
