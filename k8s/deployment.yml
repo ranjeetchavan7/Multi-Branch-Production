@@ -13,6 +13,8 @@ spec:
       labels:
         app: my-app
     spec:
+      imagePullSecrets:
+        - name: dockerhub-secret
       containers:
         - name: my-app-container
           image: ranjeet301095/multibranch-flask-app
