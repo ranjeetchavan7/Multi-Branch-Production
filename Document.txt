@@ -1,0 +1,118 @@
+ecommerce-app-repo/
+│
+├── app.py
+├── requirements.txt
+├── Dockerfile
+├── Jenkinsfile
+│
+├── k8s/
+│   ├── deployment.yaml      
+│   └── service.yaml         
+│
+└── argocd/                 
+    └── application.yaml
+	
+⚠️ k8s/ and argocd/ exist ONLY in main branch
+
+#Setup Infra with the help of Terraform
+Please find terraform code in repo
+
+# Setup EC2 instance
+Install jenkins, Docker, Kubectl, aws cli
+
+#add jenkins to docker group
+sudo usermod -aG docker jenkins
+sudo systemctl restart jenkins
+
+#Update kubeconfig file with cluster details
+
+aws eks update-kubeconfig --region ap-south-1 --name prod-eks-cluster
+
+#Change directory of kubeconfig file so that jenkins can do action
+sudo mkdir -p /home/jenkins/.kube
+sudo cp /root/.kube/config /home/jenkins/.kube/config
+sudo chown -R jenkins:jenkins /home/jenkins/.kube
+=> Install Helm
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+helm version
+
+helm repo add argo https://argoproj.github.io/argo-helm
+helm repo update
+
+=> Install Argo CD
+helm install argocd argo/argo-cd -n argocd
+Verify:
+kubectl get pods -n argocd
+
+Expose Argo CD via LoadBalancer
+Patch Argo CD server service
+kubectl patch svc argocd-server -n argocd \
+-p '{"spec": {"type": "LoadBalancer"}}'
+
+kubectl get svc argocd-server -n argocd
+
+Access:
+https://<EXTERNAL-IP>
+
+Get Argo CD Admin Password
+kubectl get secret argocd-initial-admin-secret \
+-n argocd \
+-o jsonpath="{.data.password}" | base64 -d
+
+Login:
+Username: admin
+Password: (above output)
+
+
+================================================
+MONITORING
+
+🧩 PHASE 1 — Install Prometheus + Grafana using Helm
+We’ll use the kube-prometheus-stack (best practice).
+
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+kubectl create namespace monitoring
+
+helm install monitoring prometheus-community/kube-prometheus-stack \
+  -n monitoring
+⏳ Takes 1–2 minutes.
+
+kubectl get pods -n monitoring
+You should see:
+Prometheus
+alertmanager
+grafana
+node-exporter
+kube-state-metrics
+
+🧩 PHASE 2 — Access Grafana
+1️⃣ Expose Grafana (LoadBalancer)
+kubectl patch svc monitoring-grafana \
+  -n monitoring \
+  -p '{"spec":{"type":"LoadBalancer"}}'
+
+2️⃣ Get Grafana URL
+kubectl get svc monitoring-grafana -n monitoring
+
+Open:
+http://<EXTERNAL-IP>
+
+3️⃣ Get Grafana Login Password
+kubectl get secret monitoring-grafana \
+  -n monitoring \
+  -o jsonpath="{.data.admin-password}" | base64 -d
+
+Username: admin
+Password: (output)
+
+🧩 PHASE 3 — Dashboards (Already Auto-Configured)
+The stack already includes best dashboards.
+Must-use Dashboards in Grafana:
+Kubernetes / Nodes
+Kubernetes / Pods
+Kubernetes / Deployments
+Kubernetes / Cluster
+Node Exporter Full
+👉 No manual import needed. They are automatically installed by the kube-prometheus-stack Helm chart.
