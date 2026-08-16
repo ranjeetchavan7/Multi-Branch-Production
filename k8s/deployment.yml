@@ -17,6 +17,6 @@ spec:
         - name: dockerhub-secret
       containers:
         - name: my-app-container
-          image: ranjeet301095/multibranch-flask-app
+          image: ranjeet301095/multibranch-flask-app:build-2
           ports:
             - containerPort: 5000
