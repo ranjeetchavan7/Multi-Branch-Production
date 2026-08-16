@@ -26,6 +26,14 @@ sudo systemctl restart jenkins
 
 #Update kubeconfig file with cluster details
 
+#Create Secret for Docker hub so that k8 can pull image for Docker hub
+
+kubectl create secret docker-registry dockerhub-secret \
+  --docker-server=https://index.docker.io/v1/ \
+  --docker-username=Username \
+  --docker-password='User docker hub pass' \
+  -n my-namespace
+
 aws eks update-kubeconfig --region ap-south-1 --name prod-eks-cluster
 
 #Change directory of kubeconfig file so that jenkins can do action
